@@ -1,15 +1,13 @@
-# TODO:  Напишите свой вариант
-
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
 from rest_framework import permissions, viewsets, filters
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 
 from posts.models import Post, Group, Comment, Follow
-from .serializers import PostSerializer, GroupSerializer, CommentSerializer
-from .serializers import FollowSerializer
+from .serializers import (
+    PostSerializer, GroupSerializer, CommentSerializer, FollowSerializer
+)
 from .permissions import AuthorOrReadOnly
 
 
@@ -19,20 +17,11 @@ User = get_user_model
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (AuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied()
-        super(PostViewSet, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        if instance.author != self.request.user:
-            raise PermissionDenied()
-        return super().perform_destroy(instance)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
